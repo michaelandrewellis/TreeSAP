@@ -7,7 +7,6 @@ import sys
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 def generate_potential_peptides(seq,max_intervening_distance = 20,model='combined'):
-    n_cleavage_residues = 2 # REMOVE THIS - FIX IT
     output = []
     for start in range(1,len(seq)+1): # start point
         for length in range(1,9): # length of first precursor
@@ -42,35 +41,31 @@ def generate_potential_peptides(seq,max_intervening_distance = 20,model='combine
                         else:
                             binding2_2 = None
                         try:
-                            cleavage1 = seq[max(0, start1 - (n_cleavage_residues + 1)):start1 - 1]
-                            cleavage2 = seq[end1:min(end1 + n_cleavage_residues, len(seq))]
-                            cleavage3 = seq[max(0, start2 - (n_cleavage_residues + 1)):start2 - 1]
-                            cleavage4 = seq[end2:min(end2 + n_cleavage_residues, len(seq))]
+                            cleavage1 = seq[max(0, start1 - (2 + 1)):start1 - 1]
+                            cleavage2 = seq[end1:min(end1 + 2, len(seq))]
+                            cleavage3 = seq[max(0, start2 - (2 + 1)):start2 - 1]
+                            cleavage4 = seq[end2:min(end2 + 2, len(seq))]
                         except:
                             continue
                         output.append(
                             [peptide,start1,end1,start2,end2,length1, binding1_2, binding1_1, binding2_1, binding2_2, reversed, distance,
                              cleavage1,
                              cleavage2, cleavage3, cleavage4])
-    df = pd.DataFrame(output,
-                             columns=['peptide','start1','end1','start2','end2', 'length1', 'binding1_2', 'binding1_1', 'binding2_1',
-                                      'binding2_2',
+    df = pd.DataFrame(output, columns=['peptide','start1','end1','start2','end2', 'length1', 
+                                      'binding1_2', 'binding1_1', 'binding2_1', 'binding2_2',
                                       'reversed', 'distance', 'cleavage1', 'cleavage2', 'cleavage3',
                                       'cleavage4'])
-    df[['seq_1', 'seq_2', 'seq_3', 'seq_4', 'seq_5', 'seq_6', 'seq_7', 'seq_8',
-               'seq_9']] = pd.DataFrame([list(x) for x in df['peptide']])
+    df[['seq_1', 'seq_2', 'seq_3', 'seq_4', 'seq_5', 'seq_6', 'seq_7', 'seq_8','seq_9']] = \
+        pd.DataFrame([list(x) for x in df['peptide']])
     for cleavage in ['cleavage1', 'cleavage2', 'cleavage3', 'cleavage4']:
         cols = []
-        for i in range(1, n_cleavage_residues + 1):
+        for i in range(1, 2 + 1):
             cols.append(cleavage + '_' + str(i))
-        #print(cols)
-        #print([list(x) for x in df_output[cleavage]])
         df[cols] = pd.DataFrame([list(x) for x in df[cleavage]])
-    df_original = df.copy(deep=True) # Change this to something more elegant
+    df_original = df.copy(deep=True) 
     df.drop('peptide',inplace=True,axis=1)
     df.drop(['start1','end1','start2','end2'],inplace=True,axis=1)
     df.drop(['cleavage1','cleavage2','cleavage3','cleavage4'],inplace=True,axis=1)
-    
     df[['length1', 'distance']] = df[['length1', 'distance']].applymap(str)
     df.drop(['distance'], axis=1, inplace=True)
     df.fillna('',inplace=True)
